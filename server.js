@@ -6,8 +6,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Your API keys
-const GEOAPIFY_API_KEY = 'cf46c50cc0034ecabc926d342c49e8b8';
-const WEATHERSTACK_API_KEY = 'c180ff5a8859cfdcbd58e12c790a198b';
+const GEOAPIFY_API_KEY = 'SECRET';
+const WEATHERSTACK_API_KEY = 'SECRET';
 
 // Function to calculate distance between two lat/lon points using the Haversine formula
 function calculateDistance(lat1, lon1, lat2, lon2) {
