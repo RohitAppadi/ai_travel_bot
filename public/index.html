@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Travel Companion</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      margin: 0; padding: 20px;
+      color: #333;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgb(0 0 0 / 0.1);
+    }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin-top: 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    button {
+      background: #0077cc;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    button:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+    h1 {
+      text-align: center;
+      color: #0077cc;
+    }
+    .result-section {
+      margin-top: 20px;
+    }
+    .hotel {
+      border-bottom: 1px solid #ddd;
+      padding: 10px 0;
+    }
+    .hotel:last-child {
+      border-bottom: none;
+    }
+    .error {
+      color: red;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="root" class="container"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    function App() {
+      const [location, setLocation] = useState('');
+      const [loading, setLoading] = useState(false);
+      const [error, setError] = useState('');
+      const [result, setResult] = useState(null);
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setResult(null);
+
+        if (!location.trim()) {
+          setError('Please enter a location');
+          return;
+        }
+
+        setLoading(true);
+        try {
+          const res = await axios.post('/api/plan-trip', { location });
+          setResult(res.data);
+        } catch (err) {
+          setError(err.response?.data?.error || 'Failed to fetch data');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <div>
+          <h1>AI Travel Companion</h1>
+          <form onSubmit={handleSubmit}>
+            <input
+              type="text"
+              placeholder="Enter your travel location"
+              value={location}
+              onChange={e => setLocation(e.target.value)}
+              disabled={loading}
+            />
+            <button type="submit" disabled={loading}>
+              {loading ? 'Planning your trip...' : 'Plan My Trip'}
+            </button>
+          </form>
+
+          {error && <div className="error">{error}</div>}
+
+          {result && (
+            <div className="result-section">
+              <h2>Trip Plan for {result.location}</h2>
+              <p><strong>Coordinates:</strong> {result.coordinates.lat.toFixed(4)}, {result.coordinates.lon.toFixed(4)}</p>
+
+              <h3>Nearest Hotels:</h3>
+              {result.hotels.length ? (
+                result.hotels.map((hotel, i) => (
+                  <div key={i} className="hotel">
+                    <strong>{hotel.name}</strong><br />
+                    {hotel.address}<br />
+                    Distance: {(hotel.distance_meters / 1000).toFixed(2)} km
+                  </div>
+                ))
+              ) : (
+                <p>No hotels found nearby.</p>
+              )}
+
+              <h3>Current Weather:</h3>
+              {result.weather ? (
+                <p>
+                  {result.weather.description}, {result.weather.temperature}°C<br />
+                  Wind: {result.weather.wind_speed} km/h, Humidity: {result.weather.humidity}%
+                </p>
+              ) : (
+                <p>Weather data not available.</p>
+              )}
+
+              <h3>Taxi Booking:</h3>
+              <p>{result.taxiBooking.message}</p>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
